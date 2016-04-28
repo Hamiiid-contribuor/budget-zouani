@@ -13,7 +13,7 @@
 
     <h:body>
 
-        <p:growl id="growl" life="3000" />
+        <p:growl id="growl" sticky="true" showDetail="true" life="3000" />
         
         <p:layout fullPage="true">
             <p:layoutUnit position="north" size="65" header="#{bundle.AppName}">
@@ -26,7 +26,7 @@
                         <p:submenu label="#{bundle.Maintenance}">
                             <p:menuitem value="Budget" outcome="/budget/List.xhtml" />
                             <p:menuitem value="BudgetEntiteAdministratif" outcome="/budgetEntiteAdministratif/List.xhtml" />
-                            <p:menuitem value="BudgetEntiteAdministratifItem" outcome="/budgetEntiteAdministratifItem/List.xhtml" />
+                            <p:menuitem value="BudgetEntiteAdministratifItem" outcome="/budgetEntiteAdministratifItem/List.xhtml"  action="#{budgetEntiteAdministratifItemController.budgetItemInvalide()}" update=":growl"/>
                             <p:menuitem value="BudgetFaculte" outcome="/budgetFaculte/List.xhtml" />
                             <p:menuitem value="BudgetFaculteItem" outcome="/budgetFaculteItem/List.xhtml" />
                             <p:menuitem value="Compte" outcome="/compte/List.xhtml" />

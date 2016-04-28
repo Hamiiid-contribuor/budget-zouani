@@ -143,7 +143,7 @@ public class EntiteAdministratif implements Serializable {
 
     @Override
     public String toString() {
-        return "bean.EntiteAdministratif[ id=" + id + " ]";
+        return "Nom =" + nom ;
     }
 
 }

@@ -3,6 +3,7 @@ package controller;
 import bean.EntiteAdministratif;
 import controller.util.JsfUtil;
 import controller.util.JsfUtil.PersistAction;
+import controller.util.SessionUtil;
 import service.EntiteAdministratifFacade;
 
 import java.io.Serializable;
@@ -76,7 +77,9 @@ public class EntiteAdministratifController implements Serializable {
 
     public List<EntiteAdministratif> getItems() {
         if (items == null) {
-            items = getFacade().findAll();
+//            items = getFacade().findAll();
+            items = SessionUtil.getCurrentFaculte().getEntiteAdministratifs();
+            System.out.println(" ha les entite lilas9in fsahbna ---> " + items);
         }
         return items;
     }

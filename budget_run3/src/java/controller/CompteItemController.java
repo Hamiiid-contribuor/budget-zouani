@@ -64,6 +64,7 @@ public class CompteItemController implements Serializable {
         budget = budgetEntiteAdministratif.getMontantAffecte();
         budgetEngage = budgetEntiteAdministratif.getMontantEngage();
         budgetPaye = budgetEntiteAdministratif.getMontantPaye();
+        items = ejbFacade.findAll(budgetEntiteAdministratif);
         System.out.println(budget);
     }
 
@@ -76,36 +77,35 @@ public class CompteItemController implements Serializable {
 
         if (selected.getMontantAffecte() > budget) {
             message = MessageManager.createErrorMessage(-1, "Attention affecte>Budget Total");
-           
+            MessageManager.showMessage(message);
             return -1;
         }
 
         if (selected.getMontantEngage() > selected.getMontantAffecte()) {
             message = MessageManager.createErrorMessage(-2, "Attention engage>affecte ");
-            
+            MessageManager.showMessage(message);
             return -1;
         }
         if (selected.getMontantEngage() < selected.getMontantPaye()) {
             message = MessageManager.createErrorMessage(-3, "Attention paye>engage ");
-            
+            MessageManager.showMessage(message);
             return -1;
         }
         if (selected.getMontantAffecte() > montantMax) {
             message = MessageManager.createErrorMessage(-4, "Attention Affecte>Montant Max du Compte ");
-            
+            MessageManager.showMessage(message);
             return -1;
         }
         if (isCompteSelected(clone(selected).getCompte(), compteItems) == 1 || isCompteSelected(clone(selected).getCompte(), items) == 1) {
             message = MessageManager.createErrorMessage(-5, "le Compte est deja selectionner ");
-            
+            MessageManager.showMessage(message);
             return -1;
         }
-        if (budgetEngage > budget ) {
+        if (budgetEngage > budget) {
             message = MessageManager.createErrorMessage(-6, "Attetion le BudgetEntiteAdmin est dépassé");
-            
+            MessageManager.showMessage(message);
             return -1;
         }
-        MessageManager.showMessage(message);
         return 1;
     }
 
@@ -139,6 +139,7 @@ public class CompteItemController implements Serializable {
     private void createCompteItems() {
         for (CompteItem compteItem : compteItems) {
             ejbFacade.create(compteItem);
+            System.out.println("ha lcompte item tcrea ");
             budgetEntiteAdministratifItemFacade.create(addBudgetEntityAdminItem(compteItem));
 
         }
@@ -247,7 +248,8 @@ public class CompteItemController implements Serializable {
 
     public List<CompteItem> getItems() {
         if (items == null) {
-            items = getFacade().findAll();
+//            items = getFacade().findAll();
+            items = new ArrayList();
         }
         return items;
     }

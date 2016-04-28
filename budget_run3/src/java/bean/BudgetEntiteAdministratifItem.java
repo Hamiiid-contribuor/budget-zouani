@@ -27,7 +27,8 @@ public class BudgetEntiteAdministratifItem implements Serializable {
     private CompteItem compteItem;
     @ManyToOne
     private BudgetEntiteAdministratif budgetEntiteAdministratif;
-    
+    private int valider;
+
 //****************************************************************************
     public CompteItem getCompteItem() {
         return compteItem;
@@ -58,6 +59,14 @@ public class BudgetEntiteAdministratifItem implements Serializable {
         int hash = 0;
         hash += (id != null ? id.hashCode() : 0);
         return hash;
+    }
+
+    public int getValider() {
+        return valider;
+    }
+
+    public void setValider(int valider) {
+        this.valider = valider;
     }
 
     @Override

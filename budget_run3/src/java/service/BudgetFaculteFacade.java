@@ -19,6 +19,7 @@ import javax.persistence.PersistenceContext;
  */
 @Stateless
 public class BudgetFaculteFacade extends AbstractFacade<BudgetFaculte> {
+
     @PersistenceContext(unitName = "budget_run2PU")
     private EntityManager em;
 
@@ -30,10 +31,10 @@ public class BudgetFaculteFacade extends AbstractFacade<BudgetFaculte> {
     public BudgetFaculteFacade() {
         super(BudgetFaculte.class);
     }
-    
-     public List<BudgetFaculte> findByFaculte(Faculte faculte){
-        if(faculte !=null && faculte.getId()!= null){
-            String requette = "SELECT bf FROM BudgetFaculte bf WHERE bf.faculte.id ="+faculte.getId();
+
+    public List<BudgetFaculte> findByFaculte(Faculte faculte) {
+        if (faculte != null && faculte.getId() != null) {
+            String requette = "SELECT bf FROM BudgetFaculte bf WHERE bf.faculte.id =" + faculte.getId();
             return em.createQuery(requette).getResultList();
         }
         return new ArrayList();

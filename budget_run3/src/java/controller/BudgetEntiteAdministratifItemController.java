@@ -1,11 +1,16 @@
 package controller;
 
+import bean.BudgetEntiteAdministratif;
 import bean.BudgetEntiteAdministratifItem;
+import bean.EntiteAdministratif;
 import controller.util.JsfUtil;
 import controller.util.JsfUtil.PersistAction;
+import controller.util.Message;
+import controller.util.MessageManager;
 import service.BudgetEntiteAdministratifItemFacade;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -18,6 +23,8 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
 import javax.faces.convert.FacesConverter;
+import service.BudgetEntiteAdministratifFacade;
+import service.CompteItemFacade;
 
 @Named("budgetEntiteAdministratifItemController")
 @SessionScoped
@@ -27,6 +34,25 @@ public class BudgetEntiteAdministratifItemController implements Serializable {
     private service.BudgetEntiteAdministratifItemFacade ejbFacade;
     private List<BudgetEntiteAdministratifItem> items = null;
     private BudgetEntiteAdministratifItem selected;
+
+    private EntiteAdministratif entiteAdministratif;
+    private String annee;
+    private int valider = 1;
+
+    private BudgetEntiteAdministratif budgetEntiteAdministratif;
+    private Double montantAffecterBudget;
+    @EJB
+    private BudgetEntiteAdministratifFacade budgetEntiteAdministratifFacade;
+    @EJB
+    private BudgetEntiteAdministratifItemFacade budgetEntiteAdministratifItemFacade;
+    @EJB
+    private CompteItemFacade compteItemFacade;
+    private Message message;
+    private int res = 0;
+    private List<BudgetEntiteAdministratifItem> budgetInvalide;
+
+    private Double budgetEngagerEntiteAdmin;
+    private Double budgetPayerEntiteAdmin;
 
     public BudgetEntiteAdministratifItemController() {
     }
@@ -40,6 +66,98 @@ public class BudgetEntiteAdministratifItemController implements Serializable {
     }
 
     protected void setEmbeddableKeys() {
+    }
+
+    public EntiteAdministratif getEntiteAdministratif() {
+        if (entiteAdministratif == null) {
+            entiteAdministratif = new EntiteAdministratif();
+        }
+        return entiteAdministratif;
+    }
+
+    public void setEntiteAdministratif(EntiteAdministratif entiteAdministratif) {
+        this.entiteAdministratif = entiteAdministratif;
+    }
+
+    public String getAnnee() {
+        return annee;
+    }
+
+    public void setAnnee(String annee) {
+        this.annee = annee;
+    }
+
+    public int getValider() {
+        return valider;
+    }
+
+    public void setValider(int valider) {
+        this.valider = valider;
+    }
+
+    public List<BudgetEntiteAdministratifItem> getBudgetInvalide() {
+        if (budgetInvalide == null) {
+            budgetInvalide = new ArrayList();
+        }
+        return budgetInvalide;
+    }
+
+    public Double getBudgetEngagerEntiteAdmin() {
+        return budgetEngagerEntiteAdmin;
+    }
+
+    public void setBudgetEngagerEntiteAdmin(Double budgetEngagerEntiteAdmin) {
+        this.budgetEngagerEntiteAdmin = budgetEngagerEntiteAdmin;
+    }
+
+    public Double getBudgetPayerEntiteAdmin() {
+        return budgetPayerEntiteAdmin;
+    }
+
+    public void setBudgetPayerEntiteAdmin(Double budgetPayerEntiteAdmin) {
+        this.budgetPayerEntiteAdmin = budgetPayerEntiteAdmin;
+    }
+
+    public void setBudgetInvalide(List<BudgetEntiteAdministratifItem> budgetInvalide) {
+        this.budgetInvalide = budgetInvalide;
+    }
+
+    public BudgetEntiteAdministratif getBudgetEntiteAdministratif() {
+        if (budgetEntiteAdministratif == null) {
+            budgetEntiteAdministratif = new BudgetEntiteAdministratif();
+        }
+        return budgetEntiteAdministratif;
+    }
+
+    public void setBudgetEntiteAdministratif(BudgetEntiteAdministratif budgetEntiteAdministratif) {
+        this.budgetEntiteAdministratif = budgetEntiteAdministratif;
+    }
+
+    public Double getMontantAffecterBudget() {
+        if (montantAffecterBudget == null) {
+            montantAffecterBudget = new Double(0);
+        }
+        return montantAffecterBudget;
+    }
+
+    public void setMontantAffecterBudget(Double montantAffecterBudget) {
+        this.montantAffecterBudget = montantAffecterBudget;
+    }
+
+    public Message getMessage() {
+        return message;
+    }
+
+    public void setMessage(Message message) {
+        this.message = message;
+    }
+
+    public int getRes() {
+        return res;
+    }
+
+    public void setRes(int res) {
+        this.res = res;
     }
 
     protected void initializeEmbeddableKey() {
@@ -62,13 +180,25 @@ public class BudgetEntiteAdministratifItemController implements Serializable {
         }
     }
 
+//    public void update() {
+//        persist(PersistAction.UPDATE, ResourceBundle.getBundle("/Bundle").getString("BudgetEntiteAdministratifItemUpdated"));
+//    }
     public void update() {
-        persist(PersistAction.UPDATE, ResourceBundle.getBundle("/Bundle").getString("BudgetEntiteAdministratifItemUpdated"));
+        this.res = validateViewCompteItem();
+        if (res == 1) {
+            compteItemFacade.edit(selected.getCompteItem());
+
+            persist(PersistAction.UPDATE, ResourceBundle.getBundle("/Bundle").getString("BudgetEntiteAdministratifItemUpdated"));
+
+        }
+
     }
 
     public void destroy() {
+        compteItemFacade.remove(selected.getCompteItem());
         persist(PersistAction.DELETE, ResourceBundle.getBundle("/Bundle").getString("BudgetEntiteAdministratifItemDeleted"));
         if (!JsfUtil.isValidationFailed()) {
+
             selected = null; // Remove selection
             items = null;    // Invalidate list of items to trigger re-query.
         }
@@ -76,8 +206,18 @@ public class BudgetEntiteAdministratifItemController implements Serializable {
 
     public List<BudgetEntiteAdministratifItem> getItems() {
         if (items == null) {
-            items = getFacade().findAll();
+            // items = getFacade().findAll();
+            items = new ArrayList();
         }
+//        budgetInvalide = ejbFacade.findAllBudgetItemNonValider();
+//        if (budgetInvalide.size() != 0) {
+//            System.out.println(" ha lista dial les budget no vamider --->" + budgetInvalide);
+//            message = MessageManager.createInfoMessage(1, "Hellow : Il y a de nouveau budget a valider !!!");
+//            MessageManager.showMessage(message);
+//        } else {
+//            System.out.println(" hadi men fost el else -->ha lista dial les budget no vamider --->" + budgetInvalide);
+//
+//        }
         return items;
     }
 
@@ -159,6 +299,96 @@ public class BudgetEntiteAdministratifItemController implements Serializable {
                 return null;
             }
         }
+
+    }
+
+    ///hamid 
+    public void findBudgetByAnneAndEntity() {
+        budgetEntiteAdministratif = budgetEntiteAdministratifFacade.findByAnneAndEntity(annee, entiteAdministratif);
+        System.out.println(" ha lbudget ----> " + budgetEntiteAdministratif);
+        montantAffecterBudget = budgetEntiteAdministratif.getMontantAffecte();
+        System.out.println("ha l montant lighayt7et fdik disabled --> " + montantAffecterBudget);
+    }
+
+    public void findByCriteres() {
+        System.out.println(" sahbna dkhel elmethoda tecontroller ");
+
+        items = ejbFacade.findByCriteres(budgetEntiteAdministratif, valider);
+    }
+
+    public void update(BudgetEntiteAdministratifItem budgetEntiteAdministratifItem) {
+        selected = budgetEntiteAdministratifItem;
+    }
+
+    public int validateViewCompteItem() {
+
+        if (selected.getCompteItem().getMontantAffecte() > montantAffecterBudget) {
+            message = MessageManager.createErrorMessage(-1, "Attention affecte>Budget Total");
+            MessageManager.showMessage(message);
+            return -1;
+        }
+        if (selected.getCompteItem().getMontantEngage() > selected.getCompteItem().getMontantAffecte()) {
+            message = MessageManager.createErrorMessage(-2, "Attention engage>affecte ");
+            MessageManager.showMessage(message);
+            return -1;
+        }
+        if (selected.getCompteItem().getMontantEngage() < selected.getCompteItem().getMontantPaye()) {
+            message = MessageManager.createErrorMessage(-3, "Attention paye>engage ");
+            MessageManager.showMessage(message);
+            return -1;
+        }
+        return 1;
+    }
+
+    public void destroy(BudgetEntiteAdministratifItem budgetEntiteAdministratifItem) {
+        selected = budgetEntiteAdministratifItem;
+        destroy();
+    }
+
+    public void validate() {
+        Double montantEngageBudgetEntite = 0.0;
+        Double montantPayeBudgetEntite = 0.0;
+        for (int i = 0; i < items.size(); i++) {
+            BudgetEntiteAdministratifItem item = items.get(i);
+            montantEngageBudgetEntite += item.getCompteItem().getMontantAffecte();
+            montantPayeBudgetEntite += item.getCompteItem().getMontantPaye();
+            item.setValider(1);
+            ejbFacade.edit(item);
+
+        }
+        if (montantEngageBudgetEntite > montantAffecterBudget) {
+            System.out.println(" ha lmejmo3 ta3 l'affecter dial dok les fe tables --->" + montantEngageBudgetEntite);
+            System.out.println(" ha l'affetcer dial l'entite  --->" + montantAffecterBudget);
+            message = MessageManager.createErrorMessage(1, "vous avez depassez le Montant Affecter a cet Entite !!!");
+            MessageManager.showMessage(message);
+        } else {
+            for (int i = 0; i < items.size(); i++) {
+                BudgetEntiteAdministratifItem item = items.get(i);
+                item.setValider(1);
+                ejbFacade.edit(item);
+            }
+            budgetEntiteAdministratif.setMontantEngage(montantEngageBudgetEntite);
+            budgetEntiteAdministratif.setMontantPaye(montantPayeBudgetEntite);
+
+            budgetEntiteAdministratifFacade.edit(budgetEntiteAdministratif);
+            this.items.clear();
+
+        }
+
+    }
+
+    public int findbudgetItemInvalide() {
+
+        budgetInvalide = ejbFacade.findAllBudgetItemNonValider();
+//        if (budgetInvalide.size() != 0) {
+//            System.out.println(" ha lista dial les budget non valider --->" + budgetInvalide);
+//            message = MessageManager.createInfoMessage(1, "Hellow : Il y a de nouveau budget a valider !!!");
+//            MessageManager.showMessage(message);
+//        } else {
+//            System.out.println(" hadi men fost el else -->ha lista dial les budget no vamider --->" + budgetInvalide);
+//        }
+        System.out.println(" ha nombre teles budget non valider --->" + budgetInvalide.size());
+        return budgetInvalide.size();
 
     }
 

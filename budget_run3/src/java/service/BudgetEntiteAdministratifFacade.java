@@ -18,6 +18,7 @@ import javax.persistence.PersistenceContext;
  */
 @Stateless
 public class BudgetEntiteAdministratifFacade extends AbstractFacade<BudgetEntiteAdministratif> {
+
     @PersistenceContext(unitName = "budget_run2PU")
     private EntityManager em;
 
@@ -29,16 +30,17 @@ public class BudgetEntiteAdministratifFacade extends AbstractFacade<BudgetEntite
     public BudgetEntiteAdministratifFacade() {
         super(BudgetEntiteAdministratif.class);
     }
-    
-    public BudgetEntiteAdministratif findByAnneAndEntity(String annee, EntiteAdministratif entiteAdministratif){
-       String requette ="SELECT ba FROM BudgetEntiteAdministratif ba WHERE ba.annee='"+annee+"' and ba.entiteAdministratif.id="+entiteAdministratif.getId();
-        
+
+    public BudgetEntiteAdministratif findByAnneAndEntity(String annee, EntiteAdministratif entiteAdministratif) {
+        String requette = "SELECT ba FROM BudgetEntiteAdministratif ba WHERE ba.annee='" + annee + "' and ba.entiteAdministratif.id=" + entiteAdministratif.getId();
+
         return (BudgetEntiteAdministratif) em.createQuery(requette).getSingleResult();
-        
+
     }
-    
-    public List<BudgetEntiteAdministratif> findByEntity(EntiteAdministratif entiteAdministratif){
-        String requette = "SELECT ba FROM BudgetEntiteAdministratif ba WHERE ba.entiteAdministratif.id="+entiteAdministratif.getId();
+
+    public List<BudgetEntiteAdministratif> findByEntity(EntiteAdministratif entiteAdministratif) {
+        String requette = "SELECT ba FROM BudgetEntiteAdministratif ba WHERE ba.entiteAdministratif.id=" + entiteAdministratif.getId();
         return em.createQuery(requette).getResultList();
     }
+
 }
